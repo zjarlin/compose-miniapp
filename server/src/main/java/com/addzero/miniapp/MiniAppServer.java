@@ -67,6 +67,8 @@ public final class MiniAppServer {
                 createOrder(exchange);
             } else if (path.startsWith("/api/orders/") && path.endsWith("/pay")) {
                 payOrder(exchange, path);
+            } else if ("/api/wechat/notify".equals(path) && "POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                wechatNotify(exchange);
             } else if ("/api/login".equals(path) && "POST".equalsIgnoreCase(exchange.getRequestMethod())) {
                 ok(exchange, Map.of("user", Map.of("nickname", "微信用户", "phone", "13800000000")));
             } else {
@@ -107,6 +109,28 @@ public final class MiniAppServer {
         }
         orders.put(id, new OrderRecord(order.id(), order.storeId(), order.title(), order.amount(), "已发起支付", order.createdAt(), order.items()));
         ok(exchange, payment);
+    }
+
+    private void wechatNotify(HttpExchange exchange) throws Exception {
+        if (!payClient.notifyConfigured()) {
+            fail(exchange, 503, "PAY_NOT_CONFIGURED", "WECHAT_API_V3_KEY and WECHAT_PLATFORM_PUBLIC_KEY are required.");
+            return;
+        }
+        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        Map<String, String> headers = new LinkedHashMap<>();
+        exchange.getRequestHeaders().forEach((key, values) -> {
+            if (!values.isEmpty()) {
+                headers.put(key, values.get(0));
+            }
+        });
+        Map<String, Object> notification = payClient.verifyAndDecryptNotification(headers, body);
+        String orderId = String.valueOf(notification.get("outTradeNo"));
+        String state = String.valueOf(notification.get("tradeState"));
+        OrderRecord order = orders.get(orderId);
+        if (order != null && "SUCCESS".equalsIgnoreCase(state)) {
+            orders.put(orderId, new OrderRecord(order.id(), order.storeId(), order.title(), order.amount(), "支付成功", order.createdAt(), order.items()));
+        }
+        ok(exchange, Map.of("code", "SUCCESS", "message", "成功"));
     }
 
     private int parseItemsAmount(String body) {

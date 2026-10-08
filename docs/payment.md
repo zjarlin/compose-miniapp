@@ -17,6 +17,7 @@
 | `WECHAT_MCH_PRIVATE_KEY` | PKCS#8 商户私钥，允许带 PEM 头尾 |
 | `WECHAT_OPENID` | 演示用付款用户 OpenID |
 | `WECHAT_NOTIFY_URL` | 微信支付异步通知地址 |
+| `WECHAT_PLATFORM_PUBLIC_KEY` | 微信支付平台公钥，用于通知验签 |
 
 `WECHAT_OPENID` 和 `WECHAT_NOTIFY_URL` 在这里用于可运行演示；真实业务应从登录态解析 OpenID，
 并确保通知地址是 HTTPS 已备案域名。若缺少任一必需变量，服务返回 `mock: true`，明确表示未扣款。
@@ -26,8 +27,8 @@
 1. 小程序主体完成微信认证并开通微信支付；
 2. 后端部署到 HTTPS 域名，配置 `request` / `requestPayment` 合法域名；
 3. 设置上述环境变量，不把私钥写入镜像或仓库；
-4. 补 `/api/wechat/notify`：校验 `Wechatpay-Signature`、解密 `resource`、幂等更新订单；
+4. 当前 `/api/wechat/notify` 已实现签名校验和 `resource` AES-GCM 解密；生产仍应把内存订单替换为数据库，并加幂等键；
 5. 在小程序后台完成支付目录、隐私指引和体验版真机验证。
 
-当前服务的 `MiniAppServer` 已实现 JSAPI 下单参数生成，但未实现回调验签和持久化；这是上线硬前置，
-不能把 `/pay` 返回成功直接当作最终支付成功。
+当前服务的 `MiniAppServer` 已实现 JSAPI 下单参数生成和通知验签/解密，但订单仍是内存存储。
+接入生产数据库和幂等更新前，不能把 `/pay` 返回成功直接当作最终支付成功。

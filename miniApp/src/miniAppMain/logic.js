@@ -66,7 +66,7 @@ const DEFAULT_PRODUCTS = [
 
 function api(path) {
   const app = getApp();
-  return ((app && app.globalData && app.globalData.apiBase) || "http://127.0.0.1:18092") + path;
+  return ((app && app.globalData && app.globalData.apiBase) || "http://127.0.0.1:18192") + path;
 }
 
 function toast(title) {

@@ -12,8 +12,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.LinkedHashMap;
@@ -31,6 +33,30 @@ final class WechatPayClient {
             && notBlank(env("WECHAT_MCH_SERIAL_NO"))
             && notBlank(env("WECHAT_MCH_PRIVATE_KEY"))
             && notBlank(env("WECHAT_OPENID"));
+    }
+
+    boolean notifyConfigured() {
+        return notBlank(env("WECHAT_API_V3_KEY")) && notBlank(env("WECHAT_PLATFORM_PUBLIC_KEY"));
+    }
+
+    Map<String, Object> verifyAndDecryptNotification(Map<String, String> headers, String body) throws Exception {
+        String timestamp = header(headers, "Wechatpay-Timestamp");
+        String nonce = header(headers, "Wechatpay-Nonce");
+        String signature = header(headers, "Wechatpay-Signature");
+        String message = timestamp + "\n" + nonce + "\n" + body + "\n";
+        if (!verify(env("WECHAT_PLATFORM_PUBLIC_KEY"), message, signature)) {
+            throw new GeneralSecurityException("Invalid Wechat pay notification signature");
+        }
+        String resource = extractJsonString(body, "resource");
+        String ciphertext = extractJsonString(resource, "ciphertext");
+        String associatedData = extractJsonString(resource, "associated_data");
+        String resourceNonce = extractJsonString(resource, "nonce");
+        String plaintext = decryptResource(ciphertext, associatedData, resourceNonce);
+        return Map.of(
+            "outTradeNo", extractJsonString(plaintext, "out_trade_no"),
+            "tradeState", extractJsonString(plaintext, "trade_state"),
+            "transactionId", extractJsonString(plaintext, "transaction_id")
+        );
     }
 
     Map<String, Object> createJsapiPayment(String orderId, int amountCent, String description) throws Exception {
@@ -93,10 +119,43 @@ final class WechatPayClient {
         return Base64.getEncoder().encodeToString(signer.sign());
     }
 
+    private boolean verify(String publicKey, String message, String signature) throws GeneralSecurityException {
+        byte[] bytes = Base64.getDecoder().decode(stripPublicPem(publicKey));
+        PublicKey key = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(bytes));
+        Signature verifier = Signature.getInstance("SHA256withRSA");
+        verifier.initVerify(key);
+        verifier.update(message.getBytes(StandardCharsets.UTF_8));
+        return verifier.verify(Base64.getDecoder().decode(signature));
+    }
+
+    private String decryptResource(String ciphertext, String associatedData, String nonce) throws GeneralSecurityException {
+        byte[] key = env("WECHAT_API_V3_KEY").getBytes(StandardCharsets.UTF_8);
+        byte[] iv = nonce.getBytes(StandardCharsets.UTF_8);
+        byte[] encrypted = Base64.getDecoder().decode(ciphertext);
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
+        cipher.updateAAD(associatedData.getBytes(StandardCharsets.UTF_8));
+        return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
+    }
+
     private String stripPem(String value) {
         return value.replace("-----BEGIN PRIVATE KEY-----", "")
             .replace("-----END PRIVATE KEY-----", "")
             .replaceAll("\\s+", "");
+    }
+
+    private String stripPublicPem(String value) {
+        return value.replace("-----BEGIN PUBLIC KEY-----", "")
+            .replace("-----END PUBLIC KEY-----", "")
+            .replaceAll("\\s+", "");
+    }
+
+    private String header(Map<String, String> headers, String key) {
+        return headers.entrySet().stream()
+            .filter(entry -> entry.getKey().equalsIgnoreCase(key))
+            .map(Map.Entry::getValue)
+            .findFirst()
+            .orElse("");
     }
 
     private String extractJsonString(String body, String field) {
