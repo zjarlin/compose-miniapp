@@ -3,6 +3,8 @@ package com.addzero.miniapp;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -13,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -81,11 +84,36 @@ public final class MiniAppServer {
 
     private void createOrder(HttpExchange exchange) throws IOException {
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-        String storeId = extract(body, "storeId");
-        int amountCent = parseItemsAmount(body);
-        String id = "order-" + UUID.randomUUID().toString().substring(0, 8);
+        String storeId;
+        int amountCent = 0;
+        List<OrderLine> lines = new ArrayList<>();
+        Store store;
+        try {
+            JsonObject request = JsonParser.parseString(body).getAsJsonObject();
+            storeId = request.get("storeId").getAsString();
+            store = stores.stream().filter(item -> item.id().equals(storeId)).findFirst().orElseThrow();
+            for (var value : request.getAsJsonArray("items")) {
+                JsonObject item = value.getAsJsonObject();
+                String productId = item.get("id").getAsString();
+                int quantity = item.get("quantity").getAsBigDecimal().intValueExact();
+                if (quantity < 1 || quantity > 99) {
+                    throw new IllegalArgumentException("quantity must be between 1 and 99");
+                }
+                Product product = products.stream().filter(p -> p.id().equals(productId)).findFirst().orElseThrow();
+                int unitPriceCent = amountCent(product.price());
+                amountCent = Math.addExact(amountCent, Math.multiplyExact(unitPriceCent, quantity));
+                lines.add(new OrderLine(product.id(), product.name(), quantity, unitPriceCent));
+            }
+            if (lines.isEmpty() || lines.size() > 100) {
+                throw new IllegalArgumentException("items must contain between 1 and 100 products");
+            }
+        } catch (RuntimeException error) {
+            fail(exchange, 400, "INVALID_ORDER", "Invalid store, product or quantity");
+            return;
+        }
+        String id = "order-" + UUID.randomUUID();
         String createdAt = DateTimeFormatter.ISO_INSTANT.format(Instant.now());
-        OrderRecord order = new OrderRecord(id, storeId, "巷口老火锅外卖", "¥" + String.format("%.2f", amountCent / 100.0), "待支付", createdAt, List.of());
+        OrderRecord order = new OrderRecord(id, storeId, store.name() + "外卖", "¥" + String.format(Locale.ROOT, "%.2f", amountCent / 100.0), "待支付", createdAt, List.copyOf(lines));
         orders.put(id, order);
         created(exchange, order);
     }
@@ -133,38 +161,9 @@ public final class MiniAppServer {
         ok(exchange, Map.of("code", "SUCCESS", "message", "成功"));
     }
 
-    private int parseItemsAmount(String body) {
-        int sum = 0;
-        int index = 0;
-        while ((index = body.indexOf("unitPriceCent", index)) >= 0) {
-            int colon = body.indexOf(':', index);
-            int end = colon + 1;
-            while (end < body.length() && Character.isDigit(body.charAt(end))) {
-                end++;
-            }
-            if (end > colon + 1) {
-                sum += Integer.parseInt(body.substring(colon + 1, end));
-            }
-            index = end;
-        }
-        return sum <= 0 ? 3800 : sum;
-    }
-
     private int amountCent(String amount) {
         String normalized = amount.replace("¥", "").trim();
         return (int) Math.round(Double.parseDouble(normalized) * 100);
-    }
-
-    private String extract(String body, String field) {
-        String token = "\"" + field + "\"";
-        int index = body.indexOf(token);
-        if (index < 0) {
-            return "";
-        }
-        int colon = body.indexOf(':', index + token.length());
-        int firstQuote = body.indexOf('"', colon + 1);
-        int secondQuote = body.indexOf('"', firstQuote + 1);
-        return body.substring(firstQuote + 1, secondQuote);
     }
 
     private void cors(HttpExchange exchange) {

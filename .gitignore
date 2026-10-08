@@ -1,5 +1,6 @@
 .DS_Store
 out/
+site/
 server/out/
 .env
 *.log

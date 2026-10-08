@@ -154,9 +154,25 @@ build.sh / run.sh                 构建与运行（kotlinc 工具链，无 Grad
 - 组件白名单：Column/Row/Text/Button/Image/List/Input/ScrollView/Spacer/IfBlock + LazyColumn（→List）
 - 参数只接受：字面量、状态字段引用（state.x / 裸名）、循环变量（item.x）、带单位数字、
   TextStyle/Modifier 白名单、常量（Arrangement/FontWeight/Color/Alignment）
-- 逻辑层 `logic.js` 目前是占位空模块；网络/存储等 Kotlin 逻辑接入见规格 §8（expect/actual）
+- 逻辑层 `logic.js` 已实现演示门店、购物车、订单及微信支付调用；尚不是 Kotlin/JS 业务逻辑编译
 - 不支持：真 androidx Compose、任意表达式/函数调用、动画/手势、动态 UI、分包、多小程序平台
 - 页面文件名 = 页面名（HomePage.kt → home），页面路径以 @EntryPoint 为准
+- 后端是验证原型：内存订单、演示登录和 OpenID；没有生产认证、订单隔离及完整通知校验，不能直接用于真实交易
+
+## 252 部署与验证
+
+项目部署在 `/opt/compose-miniapp`，Nginx 入口 `18192`，API 仅监听宿主机 `127.0.0.1:19092`。
+在能够访问 252 内网的机器上打开 `http://192.168.31.252:18192/`；这是静态展示，不是小程序模拟器。
+
+本地微信开发者工具可通过 SSH 隧道连接演示 API：
+
+```bash
+ssh -N -L 18192:127.0.0.1:18192 okm252
+```
+
+导入 `out/miniapp-meituan`，仅在本地开发时关闭合法域名校验。
+真机需要可访问的 HTTPS 后端地址，在 `miniApp/src/miniAppMain/app.js` 配置 `apiBase` 后重新转译。
+`./build-server.sh` 验证门店 JSON、服务端计价、数量、非法订单及 mock 支付；不会调用真实商户支付。
 
 ## 下一步（V2 候选）
 
