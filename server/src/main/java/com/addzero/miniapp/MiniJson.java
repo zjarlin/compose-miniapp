@@ -1,6 +1,8 @@
 package com.addzero.miniapp;
 
 import java.util.Collection;
+import java.lang.reflect.RecordComponent;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringJoiner;
 
@@ -24,7 +26,22 @@ final class MiniJson {
         if (value instanceof Collection<?> collection) {
             return collectionToJson(collection);
         }
+        if (value.getClass().isRecord()) {
+            return recordToJson(value);
+        }
         throw new IllegalArgumentException("Unsupported JSON type: " + value.getClass());
+    }
+
+    private static String recordToJson(Object value) {
+        Map<String, Object> fields = new LinkedHashMap<>();
+        for (RecordComponent component : value.getClass().getRecordComponents()) {
+            try {
+                fields.put(component.getName(), component.getAccessor().invoke(value));
+            } catch (ReflectiveOperationException error) {
+                throw new IllegalArgumentException("Cannot serialize record " + value.getClass().getName(), error);
+            }
+        }
+        return mapToJson(fields);
     }
 
     private static String mapToJson(Map<?, ?> map) {

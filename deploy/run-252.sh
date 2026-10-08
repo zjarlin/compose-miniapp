@@ -5,9 +5,9 @@ cd /opt/compose-miniapp
 ./build-server.sh
 docker compose up -d --build
 for i in $(seq 1 30); do
-  if curl -fsS http://127.0.0.1:18192/ready >/dev/null; then
+  if curl -fsS http://127.0.0.1:19092/ready >/dev/null; then
     echo "✔ 252 compose-miniapp API ready"
-    curl -fsS http://127.0.0.1:18192/ready
+    curl -fsS http://127.0.0.1:19092/ready
     echo
     exit 0
   fi
