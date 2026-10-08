@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Compose 外卖 MiniApp 预览</title>
+  <style>
+    :root { color-scheme: light; --orange: #ff5000; --ink: #222; --muted: #777; --line: #ececec; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f3f4f6; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    main { max-width: 980px; margin: 0 auto; padding: 28px 18px 48px; }
+    h1 { margin: 0 0 6px; font-size: 26px; }
+    .sub { color: var(--muted); margin-bottom: 24px; }
+    .phones { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px; }
+    .phone { background: white; border: 1px solid var(--line); border-radius: 22px; padding: 12px; box-shadow: 0 8px 22px rgba(15, 23, 42, .06); }
+    .status { height: 18px; display: flex; justify-content: space-between; color: #777; font-size: 10px; margin-bottom: 8px; }
+    .screen { background: #f7f8fa; border-radius: 16px; min-height: 420px; overflow: hidden; }
+    .top { background: var(--orange); color: white; padding: 14px 12px 12px; }
+    .top b { font-size: 18px; }
+    .search { margin-top: 12px; background: white; color: #999; border-radius: 14px; padding: 10px 12px; font-size: 13px; }
+    .hero { margin: 10px; padding: 10px; border-radius: 12px; background: #fff3eb; display: flex; gap: 10px; align-items: center; }
+    .hero img, .card img { width: 84px; height: 70px; object-fit: cover; border-radius: 9px; display: block; }
+    .hero strong { color: var(--orange); font-size: 17px; }
+    .hero p, .card p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    .tabs { display: flex; gap: 16px; margin: 12px 12px 8px; color: #555; font-size: 13px; }
+    .tabs b { color: var(--orange); }
+    .card { margin: 8px 10px; padding: 10px; background: white; border-radius: 12px; }
+    .card .line { display: flex; gap: 10px; }
+    .card h3 { margin: 0 0 5px; font-size: 15px; }
+    .price { color: var(--orange); font-weight: 700; margin-top: 8px; }
+    .cart { margin: 10px; background: #222; color: white; border-radius: 22px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; }
+    .cart button { border: 0; background: #ffcf33; border-radius: 15px; padding: 8px 14px; font-weight: 700; }
+    footer { margin-top: 28px; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Compose 外卖 MiniApp</h1>
+  <div class="sub">Kotlin Compose 风格源码 → WXML / WXSS / JS / JSON。静态预览用于 GitHub 和 252 展示；真实运行请用微信开发者工具打开产物。</div>
+  <section class="phones">
+    <article class="phone">
+      <div class="status"><span>9:41</span><span>微信</span></div>
+      <div class="screen">
+        <div class="top"><b>上海 · 选择收货地址</b><div class="search">搜索商家、商品</div></div>
+        <div class="hero"><img src="assets/food-hotpot.webp" alt="" /><div><strong>今日外卖神券</strong><p>满 30 减 12，最高再减 20</p></div></div>
+        <div class="tabs"><b>美食</b><span>甜点饮品</span><span>超市便利</span><span>买药</span></div>
+        <div class="card"><div class="line"><img src="assets/food-hotpot.webp" alt="" /><div><h3>巷口老火锅</h3><p>川味火锅 · 月售 3260</p><div class="price">1.2km · 起送 ¥20</div></div></div></div>
+        <div class="card"><div class="line"><img src="assets/food-burger.webp" alt="" /><div><h3>大口堡</h3><p>汉堡炸鸡 · 月售 2180</p><div class="price">800m · 起送 ¥18</div></div></div></div>
+      </div>
+    </article>
+    <article class="phone">
+      <div class="status"><span>9:41</span><span>微信</span></div>
+      <div class="screen">
+        <div class="top"><b>巷口老火锅</b><div class="search">现做现送 · 约 32 分钟</div></div>
+        <div class="card"><div class="line"><img src="assets/food-hotpot.webp" alt="" /><div><h3>招牌牛油锅底</h3><p>月售 1024 · 好评 98%</p><div class="price">¥39.00</div></div></div></div>
+        <div class="card"><div class="line"><img src="assets/food-noodles.webp" alt="" /><div><h3>鲜切毛肚</h3><p>月售 856 · 好评 97%</p><div class="price">¥29.00</div></div></div></div>
+        <div class="card"><div class="line"><img src="assets/food-drink.webp" alt="" /><div><h3>冰粉</h3><p>月售 650 · 好评 99%</p><div class="price">¥9.90</div></div></div></div>
+        <div class="cart"><span>已选 2 件 · ¥68.00</span><button>去结算</button></div>
+      </div>
+    </article>
+    <article class="phone">
+      <div class="status"><span>9:41</span><span>微信</span></div>
+      <div class="screen">
+        <div class="top"><b>购物车</b><div class="search">上海市浦东新区世纪大道 100 号</div></div>
+        <div class="card"><div class="line"><img src="assets/food-hotpot.webp" alt="" /><div><h3>招牌牛油锅底 × 1</h3><p>小计 ¥39.00</p></div></div></div>
+        <div class="card"><div class="line"><img src="assets/food-noodles.webp" alt="" /><div><h3>鲜切毛肚 × 1</h3><p>小计 ¥29.00</p></div></div></div>
+        <div class="card"><h3>优惠券</h3><p>已减 ¥8.00 · 新人券</p></div>
+        <div class="cart"><span>合计 ¥60.00</span><button>微信支付</button></div>
+      </div>
+    </article>
+  </section>
+  <footer>支付：配置 WECHAT_* 环境变量后服务端调用微信支付 API v3；未配置时只返回 mock 订单，不会产生真实扣款。</footer>
+</main>
+</body>
+</html>

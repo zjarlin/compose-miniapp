@@ -1,0 +1,21 @@
+services:
+  compose-miniapp-api:
+    build: .
+    container_name: compose-miniapp-api
+    restart: unless-stopped
+    environment:
+      PORT: 18092
+      WECHAT_APP_ID: ${WECHAT_APP_ID:-}
+      WECHAT_MCH_ID: ${WECHAT_MCH_ID:-}
+      WECHAT_API_V3_KEY: ${WECHAT_API_V3_KEY:-}
+      WECHAT_MCH_SERIAL_NO: ${WECHAT_MCH_SERIAL_NO:-}
+      WECHAT_MCH_PRIVATE_KEY: ${WECHAT_MCH_PRIVATE_KEY:-}
+      WECHAT_OPENID: ${WECHAT_OPENID:-}
+      WECHAT_NOTIFY_URL: ${WECHAT_NOTIFY_URL:-https://example.com/api/wechat/notify}
+    ports:
+      - "127.0.0.1:18092:18092"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -qO- http://127.0.0.1:18092/ready >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 5

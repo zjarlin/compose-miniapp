@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+      - name: Install Kotlin compiler
+        run: |
+          curl -fsSL -o kotlin.zip https://github.com/JetBrains/kotlin/releases/download/v2.2.0/kotlin-compiler-2.2.0.zip
+          unzip -q kotlin.zip
+          echo "$PWD/kotlinc/bin" >> "$GITHUB_PATH"
+      - name: Build miniapp artifacts
+        run: ./run.sh
+      - name: Build server
+        run: ./build-server.sh
+      - name: Verify meituan artifact
+        run: python3 scripts/verify-meituan.py out/miniapp-meituan
