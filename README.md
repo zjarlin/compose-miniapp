@@ -33,7 +33,8 @@ API v3 密钥和商户私钥时才请求微信 `jsapi` 下单。未配置密钥�
 2. **类 Compose DSL**（`sample-app/`）：更紧凑的自定义参数（`Column(padding=, spacing=)`、
    `List(items=)`、`Button("x", onClick=)`），原有写法完全兼容。
 
-> 规格文档：《compose-miniapp-transpiler-spec.md》（/Users/zjarlin/）
+> 规格文档：[docs/compose-miniapp-transpiler-spec.md](docs/compose-miniapp-transpiler-spec.md)
+> 委托与开发计划：[docs/compose-miniapp-compiler-plan.md](docs/compose-miniapp-compiler-plan.md)
 > 本项目是规格第 3–9 章的实现。**技术选型差异**：V1 用「受限 DSL 递归下降解析器」替代规格中的
 > KSP（KSP 接入为 V2），其余契约（IR、错误码、转译规则、装配校验）与规格一致。
 
@@ -134,6 +135,10 @@ compiler/src/
   Main.kt       CLI：页面目录 → 小程序工程
 tests/NegativeTest.kt             反例测试（非法 DSL → 断言错误码）
 build.sh / run.sh                 构建与运行（kotlinc 工具链，无 Gradle）
+docs/                             设计与支付说明
+  compose-miniapp-transpiler-spec.md  路线 3 编译期静态转译实现级技术规格
+  compose-miniapp-compiler-plan.md    项目计划与委托文本
+  payment.md                          微信支付接入边界
 ```
 
 ## 已验证能力（M1 + 标准 Compose 兼容层）
