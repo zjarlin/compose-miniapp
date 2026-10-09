@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 out = Path(sys.argv[1] if len(sys.argv) > 1 else "out/miniapp-meituan")
-errors: list[str] = []
+errors = []
 
 
 def err(message: str) -> None:
